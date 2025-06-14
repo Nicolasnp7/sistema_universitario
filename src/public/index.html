@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Universitario</title>
+    <link rel="stylesheet" href="/css/index.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Sistema Universitario</h1>
+            <p>Gestión integral de estudiantes, profesores y asignaturas</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card estudiantes">
+                <div class="icon">👥</div>
+                <h3 id="totalEstudiantes">...</h3>
+                <p>Estudiantes</p>
+            </div>
+            <div class="stat-card profesores">
+                <div class="icon">👨‍🏫</div>
+                <h3 id="totalProfesores">...</h3>
+                <p>Profesores</p>
+            </div>
+            <div class="stat-card asignaturas">
+                <div class="icon">📚</div>
+                <h3 id="totalAsignaturas">...</h3>
+                <p>Asignaturas</p>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">Módulos del Sistema</h2>
+            <div class="nav-grid">
+                <a href="/estudiantes" class="nav-card">
+                    <div class="icon">👥</div>
+                    <h3>Gestión de Estudiantes</h3>
+                    <p>Registrar, consultar, actualizar y eliminar información de estudiantes</p>
+                </a>
+                
+                <a href="/profesores" class="nav-card">
+                    <div class="icon">👨‍🏫</div>
+                    <h3>Gestión de Profesores</h3>
+                    <p>Administrar datos de profesores y asignaturas que imparten</p>
+                </a>
+                
+                <a href="/asignaturas" class="nav-card">
+                    <div class="icon">📚</div>
+                    <h3>Gestión de Asignaturas</h3>
+                    <p>Crear y administrar materias, horarios y grupos</p>
+                </a>
+                
+                <a href="/profesor-asignatura" class="nav-card">
+                    <div class="icon">🎓</div>
+                    <h3>Profesor-Asignatura</h3>
+                    <p>Asignar profesores a asignaturas, gestionar grupos y horarios</p>
+                </a>
+                
+                <a href="/inscripciones" class="nav-card">
+                    <div class="icon">📝</div>
+                    <h3>Inscripciones</h3>
+                    <p>Gestionar inscripciones de estudiantes y calificaciones</p>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cargar estadísticas al cargar la página
+        async function cargarEstadisticas() {
+            try {
+                // Cargar estudiantes
+                const resEstudiantes = await fetch('/api/estudiantes');
+                const dataEstudiantes = await resEstudiantes.json();
+                document.getElementById('totalEstudiantes').textContent = dataEstudiantes.count || 0;
+
+                // Cargar profesores
+                const resProfesores = await fetch('/api/profesores');
+                const dataProfesores = await resProfesores.json();
+                document.getElementById('totalProfesores').textContent = dataProfesores.count || 0;
+
+                // Cargar asignaturas
+                const resAsignaturas = await fetch('/api/asignaturas');
+                const dataAsignaturas = await resAsignaturas.json();
+                document.getElementById('totalAsignaturas').textContent = dataAsignaturas.count || 0;
+
+            } catch (error) {
+                console.error('Error cargando estadísticas:', error);
+                document.getElementById('totalEstudiantes').textContent = '?';
+                document.getElementById('totalProfesores').textContent = '?';
+                document.getElementById('totalAsignaturas').textContent = '?';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarEstadisticas);
+    </script>
+</body>
+</html>

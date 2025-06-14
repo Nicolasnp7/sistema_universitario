@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Estudiantes - Sistema Universitario</title>
+   <link rel="stylesheet" href="/css/estudiantes.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 Gestión de Estudiantes</h1>
+            <a href="/" class="btn btn-back">← Volver al Dashboard</a>
+        </div>
+
+        <div class="content">
+            <!-- Formulario -->
+            <div class="form-section">
+                <h2 id="formTitle">➕ Agregar Nuevo Estudiante</h2>
+                <div id="successMessage" class="success-message" style="display: none;"></div>
+
+                <form id="estudianteForm">
+                    <input type="hidden" id="estudianteId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nombre">Nombre *</label>
+                            <input type="text" id="nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="apellido">Apellido *</label>
+                            <input type="text" id="apellido" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Teléfono</label>
+                            <input type="tel" id="telefono">
+                        </div>
+                        <div class="form-group">
+                            <label for="documento">Documento *</label>
+                            <input type="text" id="documento" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fechaNacimiento">Fecha de Nacimiento</label>
+                            <input type="date" id="fechaNacimiento">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 15px;">
+                        <button type="submit" class="btn btn-success" id="submitBtn">💾 Guardar</button>
+                        <button type="button" class="btn btn-warning" id="cancelBtn" onclick="cancelarEdicion()">✖️ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>📋 Lista de Estudiantes</h2>
+                    <input type="text" class="search-box" id="searchBox" placeholder="🔍 Buscar estudiante...">
+                </div>
+
+                <div class="table-container">
+                    <div id="loadingTable" class="loading">Cargando estudiantes...</div>
+                    <div id="errorTable" class="error" style="display: none;">Error cargando datos</div>
+                    <div id="emptyTable" class="empty" style="display: none;">No hay estudiantes registrados</div>
+
+                    <table id="estudiantesTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre Completo</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Documento</th>
+                                <th>Fecha Nacimiento</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="estudiantesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="estudiantes.ts"></script>
+</body>
+</html>

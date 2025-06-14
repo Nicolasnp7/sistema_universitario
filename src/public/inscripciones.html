@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripciones y Calificaciones - Sistema Universitario</title>
+   <link rel="stylesheet" href="/css/inscripciones.css"
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Inscripciones y Calificaciones</h1>
+            <a href="/" class="btn btn-back">← Volver al Dashboard</a>
+        </div>
+
+        <div class="content">
+            <!-- Tabs de navegación -->
+            <div class="tabs">
+                <button class="tab active" onclick="cambiarTab('inscribir')">📝 Inscribir Estudiante</button>
+                <button class="tab" onclick="cambiarTab('calificaciones')">📊 Gestionar Calificaciones</button>
+                <button class="tab" onclick="cambiarTab('consultas')">📋 Consultar Inscripciones</button>
+            </div>
+
+            <!-- Tab 1: Inscribir Estudiante -->
+            <div id="tab-inscribir" class="tab-content active">
+                <div class="form-section">
+                    <h2>➕ Nueva Inscripción</h2>
+                    <div id="successMessageInscripcion" class="success-message" style="display: none;"></div>
+                    
+                    <form id="inscripcionForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="estudiante">Estudiante *</label>
+                                <select id="estudiante" required>
+                                    <option value="">Seleccione un estudiante...</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="asignatura">Asignatura - Profesor - Grupo *</label>
+                                <select id="asignatura" required>
+                                    <option value="">Seleccione una asignatura...</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">💾 Inscribir Estudiante</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tab 2: Gestionar Calificaciones -->
+            <div id="tab-calificaciones" class="tab-content">
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>📊 Gestión de Calificaciones</h2>
+                        <input type="text" class="search-box" id="searchCalificaciones" placeholder="🔍 Buscar estudiante o asignatura...">
+                    </div>
+                    
+                    <div class="filtros" style="padding: 20px; background: #f8f9fa;">
+                        <div class="form-group">
+                            <label for="filtroAsignatura">Filtrar por Asignatura:</label>
+                            <select id="filtroAsignatura">
+                                <option value="">Todas las asignaturas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="filtroEstado">Filtrar por Estado:</label>
+                            <select id="filtroEstado">
+                                <option value="">Todos los estados</option>
+                                <option value="EN CURSO">En Curso</option>
+                                <option value="APROBADO">Aprobado</option>
+                                <option value="REPROBADO">Reprobado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button onclick="aplicarFiltros()" class="btn btn-primary">🔍 Aplicar Filtros</button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <div id="loadingCalificaciones" class="loading">Cargando calificaciones...</div>
+                        <div id="errorCalificaciones" class="error" style="display: none;">Error cargando datos</div>
+                        <div id="emptyCalificaciones" class="empty" style="display: none;">No hay inscripciones registradas</div>
+                        
+                        <table id="calificacionesTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th>
+                                    <th>Asignatura</th>
+                                    <th>Profesor</th>
+                                    <th>Grupo</th>
+                                    <th>Nota 1</th>
+                                    <th>Nota 2</th>
+                                    <th>Nota 3</th>
+                                    <th>Promedio</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="calificacionesBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Consultar Inscripciones -->
+            <div id="tab-consultas" class="tab-content">
+                <div class="table-section">
+                    <div class="table-header">
+                        <h2>📋 Todas las Inscripciones</h2>
+                        <input type="text" class="search-box" id="searchInscripciones" placeholder="🔍 Buscar inscripción...">
+                    </div>
+                    
+                    <div class="table-container">
+                        <div id="loadingInscripciones" class="loading">Cargando inscripciones...</div>
+                        <div id="errorInscripciones" class="error" style="display: none;">Error cargando datos</div>
+                        <div id="emptyInscripciones" class="empty" style="display: none;">No hay inscripciones registradas</div>
+                        
+                        <table id="inscripcionesTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th>Estudiante</th>
+                                    <th>Documento</th>
+                                    <th>Asignatura</th>
+                                    <th>Profesor</th>
+                                    <th>Grupo</th>
+                                    <th>Horario</th>
+                                    <th>Estado</th>
+                                    <th>Fecha Inscripción</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inscripcionesBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let inscripciones = [];
+        let calificaciones = [];
+        let opcionesInscripcion = { estudiantes: [], asignaturas: [] };
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarOpcionesInscripcion();
+            cargarInscripciones();
+            cargarCalificaciones();
+        });
+
+        // Configurar formulario
+        document.getElementById('inscripcionForm').addEventListener('submit', crearInscripcion);
+
+        // Configurar búsqueda
+        document.getElementById('searchCalificaciones').addEventListener('input', filtrarCalificaciones);
+        document.getElementById('searchInscripciones').addEventListener('input', filtrarInscripciones);
+
+        function cambiarTab(tabName) {
+            // Ocultar todos los tabs
+            document.querySelectorAll('.tab-content').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+
+            // Mostrar tab seleccionado
+            document.getElementById('tab-' + tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Recargar datos según el tab
+            if (tabName === 'calificaciones') {
+                cargarCalificaciones();
+            } else if (tabName === 'consultas') {
+                cargarInscripciones();
+            }
+        }
+
+        async function cargarOpcionesInscripcion() {
+            try {
+                const response = await fetch('/api/inscripciones/opciones-inscripcion');
+                const data = await response.json();
+                
+                if (data.success) {
+                    opcionesInscripcion = data.data;
+                    
+                    // Llenar select de estudiantes
+                    const estudianteSelect = document.getElementById('estudiante');
+                    estudianteSelect.innerHTML = '<option value="">Seleccione un estudiante...</option>';
+                    data.data.estudiantes.forEach(function(estudiante) {
+                        estudianteSelect.innerHTML += '<option value="' + estudiante.id + '">' + 
+                            estudiante.nombre_completo + ' - ' + estudiante.documento + '</option>';
+                    });
+                    
+                    // Llenar select de asignaturas
+                    const asignaturaSelect = document.getElementById('asignatura');
+                    asignaturaSelect.innerHTML = '<option value="">Seleccione una asignatura...</option>';
+                    data.data.asignaturas.forEach(function(asignatura) {
+                        asignaturaSelect.innerHTML += '<option value="' + asignatura.profesor_asignatura_id + '">' + 
+                            asignatura.asignatura + ' (' + asignatura.codigo + ') - ' + asignatura.profesor + ' - Grupo ' + asignatura.grupo + '</option>';
+                    });
+                    
+                    // Llenar filtro de asignaturas
+                    const filtroAsignatura = document.getElementById('filtroAsignatura');
+                    filtroAsignatura.innerHTML = '<option value="">Todas las asignaturas</option>';
+                    const asignaturasUnicas = [...new Set(data.data.asignaturas.map(function(a) { return a.asignatura; }))];
+                    asignaturasUnicas.forEach(function(asignatura) {
+                        filtroAsignatura.innerHTML += '<option value="' + asignatura + '">' + asignatura + '</option>';
+                    });
+                } else {
+                    console.error('Error cargando opciones:', data.message);
+                    alert('Error cargando opciones de inscripción');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error cargando opciones de inscripción');
+            }
+        }
+
+        async function crearInscripcion(event) {
+            event.preventDefault();
+            
+            const formData = {
+                estudiante_id: parseInt(document.getElementById('estudiante').value),
+                profesor_asignatura_id: parseInt(document.getElementById('asignatura').value)
+            };
+
+            if (!formData.estudiante_id || !formData.profesor_asignatura_id) {
+                alert('Por favor complete todos los campos');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/inscripciones', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarMensajeExito('Estudiante inscrito correctamente', 'successMessageInscripcion');
+                    document.getElementById('inscripcionForm').reset();
+                    cargarInscripciones();
+                    cargarCalificaciones();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        async function cargarCalificaciones() {
+            try {
+                const response = await fetch('/api/inscripciones');
+                const data = await response.json();
+                
+                if (data.success) {
+                    calificaciones = data.data;
+                    mostrarCalificaciones(calificaciones);
+                } else {
+                    mostrarErrorCalificaciones('Error cargando calificaciones');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarErrorCalificaciones('Error de conexión');
+            }
+        }
+
+        function mostrarCalificaciones(lista) {
+            const tableContainer = document.getElementById('calificacionesTable');
+            const loadingDiv = document.getElementById('loadingCalificaciones');
+            const errorDiv = document.getElementById('errorCalificaciones');
+            const emptyDiv = document.getElementById('emptyCalificaciones');
+            const tbody = document.getElementById('calificacionesBody');
+
+            // Ocultar mensajes
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            emptyDiv.style.display = 'none';
+
+            if (lista.length === 0) {
+                emptyDiv.style.display = 'block';
+                tableContainer.style.display = 'none';
+                return;
+            }
+
+            // Mostrar tabla
+            tableContainer.style.display = 'table';
+            tbody.innerHTML = '';
+
+            lista.forEach(function(inscripcion) {
+                const row = document.createElement('tr');
+                
+                let estadoClass = 'estado-en-curso';
+                if (inscripcion.estado === 'APROBADO') estadoClass = 'estado-aprobado';
+                if (inscripcion.estado === 'REPROBADO') estadoClass = 'estado-reprobado';
+                
+                row.innerHTML = 
+                    '<td>' + inscripcion.estudiante + '</td>' +
+                    '<td>' + inscripcion.asignatura + '</td>' +
+                    '<td>' + inscripcion.profesor + '</td>' +
+                    '<td>' + inscripcion.grupo + '</td>' +
+                    '<td><input type="number" class="nota-input" min="0" max="5" step="0.1" value="' + (inscripcion.nota1 || '') + '" id="nota1-' + inscripcion.id + '"></td>' +
+                    '<td><input type="number" class="nota-input" min="0" max="5" step="0.1" value="' + (inscripcion.nota2 || '') + '" id="nota2-' + inscripcion.id + '"></td>' +
+                    '<td><input type="number" class="nota-input" min="0" max="5" step="0.1" value="' + (inscripcion.nota3 || '') + '" id="nota3-' + inscripcion.id + '"></td>' +
+                    '<td class="promedio">' + (inscripcion.nota_final ? inscripcion.nota_final.toFixed(1) : '-') + '</td>' +
+                    '<td><span class="estado-badge ' + estadoClass + '">' + inscripcion.estado + '</span></td>' +
+                    '<td class="actions"><button class="btn btn-warning" onclick="guardarNotas(' + inscripcion.id + ')">💾 Guardar</button></td>';
+                tbody.appendChild(row);
+            });
+        }
+
+        async function guardarNotas(inscripcionId) {
+            try {
+                const nota1 = document.getElementById('nota1-' + inscripcionId).value;
+                const nota2 = document.getElementById('nota2-' + inscripcionId).value;
+                const nota3 = document.getElementById('nota3-' + inscripcionId).value;
+                
+                const notas = {
+                    nota1: nota1 ? parseFloat(nota1) : null,
+                    nota2: nota2 ? parseFloat(nota2) : null,
+                    nota3: nota3 ? parseFloat(nota3) : null
+                };
+
+                // Validar rango de notas
+                for (const key in notas) {
+                    const value = notas[key];
+                    if (value !== null && (value < 0 || value > 5)) {
+                        alert('Las notas deben estar entre 0 y 5');
+                        return;
+                    }
+                }
+
+                const response = await fetch('/api/inscripciones/' + inscripcionId + '/notas', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(notas)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarMensajeExito('Notas actualizadas correctamente');
+                    cargarCalificaciones(); // Recargar para ver el promedio actualizado
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        async function cargarInscripciones() {
+            try {
+                const response = await fetch('/api/inscripciones');
+                const data = await response.json();
+                
+                if (data.success) {
+                    inscripciones = data.data;
+                    mostrarInscripciones(inscripciones);
+                } else {
+                    mostrarErrorInscripciones('Error cargando inscripciones');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarErrorInscripciones('Error de conexión');
+            }
+        }
+
+        function mostrarInscripciones(lista) {
+            const tableContainer = document.getElementById('inscripcionesTable');
+            const loadingDiv = document.getElementById('loadingInscripciones');
+            const errorDiv = document.getElementById('errorInscripciones');
+            const emptyDiv = document.getElementById('emptyInscripciones');
+            const tbody = document.getElementById('inscripcionesBody');
+
+            // Ocultar mensajes
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            emptyDiv.style.display = 'none';
+
+            if (lista.length === 0) {
+                emptyDiv.style.display = 'block';
+                tableContainer.style.display = 'none';
+                return;
+            }
+
+            // Mostrar tabla
+            tableContainer.style.display = 'table';
+            tbody.innerHTML = '';
+
+            lista.forEach(function(inscripcion) {
+                const row = document.createElement('tr');
+                
+                let estadoClass = 'estado-en-curso';
+                if (inscripcion.estado === 'APROBADO') estadoClass = 'estado-aprobado';
+                if (inscripcion.estado === 'REPROBADO') estadoClass = 'estado-reprobado';
+                
+                const fechaInscripcion = new Date(inscripcion.fecha_inscripcion).toLocaleDateString('es-CO');
+                
+                row.innerHTML = 
+                    '<td>' + inscripcion.estudiante + '</td>' +
+                    '<td>' + inscripcion.estudiante_documento + '</td>' +
+                    '<td>' + inscripcion.asignatura + ' (' + inscripcion.asignatura_codigo + ')</td>' +
+                    '<td>' + inscripcion.profesor + '</td>' +
+                    '<td>' + inscripcion.grupo + '</td>' +
+                    '<td>' + inscripcion.horario + '</td>' +
+                    '<td><span class="estado-badge ' + estadoClass + '">' + inscripcion.estado + '</span></td>' +
+                    '<td>' + fechaInscripcion + '</td>' +
+                    '<td class="actions"><button class="btn btn-danger" onclick="eliminarInscripcion(' + inscripcion.id + ', \'' + inscripcion.estudiante + '\', \'' + inscripcion.asignatura + '\')">🗑️ Eliminar</button></td>';
+                tbody.appendChild(row);
+            });
+        }
+
+        async function eliminarInscripcion(id, estudiante, asignatura) {
+            if (!confirm('¿Estás seguro de que quieres eliminar la inscripción de "' + estudiante + '" en "' + asignatura + '"?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/inscripciones/' + id, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarMensajeExito('Inscripción eliminada correctamente');
+                    cargarInscripciones();
+                    cargarCalificaciones();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        function filtrarCalificaciones() {
+            const busqueda = document.getElementById('searchCalificaciones').value.toLowerCase();
+            const calificacionesFiltradas = calificaciones.filter(function(inscripcion) {
+                return inscripcion.estudiante.toLowerCase().includes(busqueda) ||
+                       inscripcion.asignatura.toLowerCase().includes(busqueda) ||
+                       inscripcion.profesor.toLowerCase().includes(busqueda) ||
+                       inscripcion.grupo.toLowerCase().includes(busqueda);
+            });
+            mostrarCalificaciones(calificacionesFiltradas);
+        }
+
+        function filtrarInscripciones() {
+            const busqueda = document.getElementById('searchInscripciones').value.toLowerCase();
+            const inscripcionesFiltradas = inscripciones.filter(function(inscripcion) {
+                return inscripcion.estudiante.toLowerCase().includes(busqueda) ||
+                       inscripcion.asignatura.toLowerCase().includes(busqueda) ||
+                       inscripcion.profesor.toLowerCase().includes(busqueda) ||
+                       inscripcion.estudiante_documento.includes(busqueda);
+            });
+            mostrarInscripciones(inscripcionesFiltradas);
+        }
+
+        function aplicarFiltros() {
+            const filtroAsignatura = document.getElementById('filtroAsignatura').value;
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            
+            let calificacionesFiltradas = [...calificaciones];
+            
+            if (filtroAsignatura) {
+                calificacionesFiltradas = calificacionesFiltradas.filter(function(c) {
+                    return c.asignatura === filtroAsignatura;
+                });
+            }
+            
+            if (filtroEstado) {
+                calificacionesFiltradas = calificacionesFiltradas.filter(function(c) {
+                    return c.estado === filtroEstado;
+                });
+            }
+            
+            mostrarCalificaciones(calificacionesFiltradas);
+        }
+
+        function mostrarErrorCalificaciones(mensaje) {
+            document.getElementById('loadingCalificaciones').style.display = 'none';
+            document.getElementById('calificacionesTable').style.display = 'none';
+            document.getElementById('emptyCalificaciones').style.display = 'none';
+            document.getElementById('errorCalificaciones').style.display = 'block';
+            document.getElementById('errorCalificaciones').textContent = mensaje;
+        }
+
+        function mostrarErrorInscripciones(mensaje) {
+            document.getElementById('loadingInscripciones').style.display = 'none';
+            document.getElementById('inscripcionesTable').style.display = 'none';
+            document.getElementById('emptyInscripciones').style.display = 'none';
+            document.getElementById('errorInscripciones').style.display = 'block';
+            document.getElementById('errorInscripciones').textContent = mensaje;
+        }
+
+        function mostrarMensajeExito(mensaje, elementId) {
+            if (elementId) {
+                const successDiv = document.getElementById(elementId);
+                if (successDiv) {
+                    successDiv.textContent = mensaje;
+                    successDiv.style.display = 'block';
+                    
+                    setTimeout(function() {
+                        successDiv.style.display = 'none';
+                    }, 3000);
+                    return;
+                }
+            }
+            
+            // Si no hay elemento específico, usar alert
+            alert(mensaje);
+        }
+    </script>
+</body>
+</html>

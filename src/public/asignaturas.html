@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Asignaturas - Sistema Universitario</title>
+    <link rel="stylesheet" href="/css/asignaturas.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Gestión de Asignaturas</h1>
+            <a href="/" class="btn btn-back">← Volver al Dashboard</a>
+        </div>
+
+        <div class="content">
+            <!-- Formulario para agregar/editar asignatura -->
+            <div class="form-section">
+                <h2 id="formTitle">➕ Agregar Nueva Asignatura</h2>
+                <div id="successMessage" class="success-message" style="display: none;"></div>
+                
+                <form id="asignaturaForm">
+                    <input type="hidden" id="asignaturaId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nombre">Nombre de la Asignatura *</label>
+                            <input type="text" id="nombre" required placeholder="Ej: Cálculo Diferencial">
+                        </div>
+                        <div class="form-group">
+                            <label for="codigo">Código *</label>
+                            <input type="text" id="codigo" required placeholder="Ej: MAT101" style="text-transform: uppercase;">
+                        </div>
+                        <div class="form-group">
+                            <label for="creditos">Créditos *</label>
+                            <input type="number" id="creditos" required min="1" max="6" placeholder="1-6">
+                        </div>
+                        <div class="form-group" style="grid-column: span 2;">
+                            <label for="descripcion">Descripción</label>
+                            <textarea id="descripcion" placeholder="Describe el contenido y objetivos de la asignatura..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <button type="submit" class="btn btn-success" id="submitBtn">💾 Guardar</button>
+                        <button type="button" class="btn btn-warning" id="cancelBtn" onclick="cancelarEdicion()" style="display: none;">✖️ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla de asignaturas -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>📋 Lista de Asignaturas</h2>
+                    <input type="text" class="search-box" id="searchBox" placeholder="🔍 Buscar asignatura...">
+                </div>
+                
+                <div class="table-container">
+                    <div id="loadingTable" class="loading">Cargando asignaturas...</div>
+                    <div id="errorTable" class="error" style="display: none;">Error cargando datos</div>
+                    <div id="emptyTable" class="empty" style="display: none;">No hay asignaturas registradas</div>
+                    
+                    <table id="asignaturasTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Créditos</th>
+                                <th>Descripción</th>
+                                <th>Profesores</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="asignaturasBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

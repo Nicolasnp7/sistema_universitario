@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión Profesor-Asignatura - Sistema Universitario</title>
+    <link rel="stylesheet" href="/css/profesor-asignatura.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Gestión Profesor-Asignatura</h1>
+            <a href="/" class="btn btn-back">← Volver al Dashboard</a>
+        </div>
+
+        <div class="content">
+            <!-- Formulario para asignar profesor a asignatura -->
+            <div class="form-section">
+                <h2 id="formTitle">➕ Asignar Profesor a Asignatura</h2>
+                <div id="successMessage" class="success-message" style="display: none;"></div>
+                
+                <form id="asignacionForm">
+                    <input type="hidden" id="asignacionId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="profesor">Profesor *</label>
+                            <select id="profesor" required>
+                                <option value="">Seleccione un profesor...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="asignatura">Asignatura *</label>
+                            <select id="asignatura" required>
+                                <option value="">Seleccione una asignatura...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="grupo">Grupo *</label>
+                            <input type="text" id="grupo" required placeholder="Ej: A, B, 01, 02">
+                        </div>
+                        <div class="form-group">
+                            <label for="horario">Horario *</label>
+                            <input type="text" id="horario" required placeholder="Ej: Lunes y Miércoles 8:00-10:00">
+                        </div>
+                        <div class="form-group">
+                            <label for="semestre">Semestre</label>
+                            <input type="text" id="semestre" placeholder="Ej: 2024-1" value="2024-1">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <button type="submit" class="btn btn-success" id="submitBtn">💾 Crear Asignación</button>
+                        <button type="button" class="btn btn-warning" id="cancelBtn" onclick="cancelarEdicion()" style="display: none;">✖️ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla de asignaciones -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>📋 Asignaciones Profesor-Asignatura</h2>
+                    <input type="text" class="search-box" id="searchBox" placeholder="🔍 Buscar asignación...">
+                </div>
+                
+                <div class="table-container">
+                    <div id="loadingTable" class="loading">Cargando asignaciones...</div>
+                    <div id="errorTable" class="error" style="display: none;">Error cargando datos</div>
+                    <div id="emptyTable" class="empty" style="display: none;">No hay asignaciones registradas</div>
+                    
+                    <table id="asignacionesTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Profesor</th>
+                                <th>Asignatura</th>
+                                <th>Grupo</th>
+                                <th>Horario</th>
+                                <th>Semestre</th>
+                                <th>Estudiantes</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="asignacionesBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let asignaciones = [];
+        let opciones = { profesores: [], asignaturas: [] };
+        let editandoId = null;
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarOpciones();
+            cargarAsignaciones();
+        });
+
+        // Configurar formulario
+        document.getElementById('asignacionForm').addEventListener('submit', guardarAsignacion);
+
+        // Configurar búsqueda
+        document.getElementById('searchBox').addEventListener('input', filtrarAsignaciones);
+
+        async function cargarOpciones() {
+            try {
+                const response = await fetch('/api/profesor-asignatura/opciones/crear');
+                const data = await response.json();
+                
+                if (data.success) {
+                    opciones = data.data;
+                    
+                    // Llenar select de profesores
+                    const profesorSelect = document.getElementById('profesor');
+                    profesorSelect.innerHTML = '<option value="">Seleccione un profesor...</option>';
+                    data.data.profesores.forEach(function(profesor) {
+                        profesorSelect.innerHTML += '<option value="' + profesor.id + '">' + 
+                            profesor.nombre_completo + ' (' + profesor.especialidad + ')</option>';
+                    });
+                    
+                    // Llenar select de asignaturas
+                    const asignaturaSelect = document.getElementById('asignatura');
+                    asignaturaSelect.innerHTML = '<option value="">Seleccione una asignatura...</option>';
+                    data.data.asignaturas.forEach(function(asignatura) {
+                        asignaturaSelect.innerHTML += '<option value="' + asignatura.id + '">' + 
+                            asignatura.nombre + ' (' + asignatura.codigo + ') - ' + asignatura.creditos + ' créditos</option>';
+                    });
+                } else {
+                    console.error('Error cargando opciones:', data.message);
+                    alert('Error cargando opciones');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error cargando opciones');
+            }
+        }
+
+        async function cargarAsignaciones() {
+            try {
+                const response = await fetch('/api/profesor-asignatura');
+                const data = await response.json();
+                
+                if (data.success) {
+                    asignaciones = data.data;
+                    mostrarAsignaciones(asignaciones);
+                } else {
+                    mostrarError('Error cargando asignaciones');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
+            }
+        }
+
+        function mostrarAsignaciones(lista) {
+            const tableContainer = document.getElementById('asignacionesTable');
+            const loadingDiv = document.getElementById('loadingTable');
+            const errorDiv = document.getElementById('errorTable');
+            const emptyDiv = document.getElementById('emptyTable');
+            const tbody = document.getElementById('asignacionesBody');
+
+            // Ocultar mensajes
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            emptyDiv.style.display = 'none';
+
+            if (lista.length === 0) {
+                emptyDiv.style.display = 'block';
+                tableContainer.style.display = 'none';
+                return;
+            }
+
+            // Mostrar tabla
+            tableContainer.style.display = 'table';
+            tbody.innerHTML = '';
+
+            lista.forEach(function(asignacion) {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = 
+                    '<td>' + asignacion.profesor + '</td>' +
+                    '<td>' + 
+                        '<strong>' + asignacion.asignatura + '</strong><br>' +
+                        '<span class="creditos-info">' + asignacion.asignatura_codigo + ' - ' + asignacion.creditos + ' créditos</span>' +
+                    '</td>' +
+                    '<td><span class="grupo-badge">Grupo ' + asignacion.grupo + '</span></td>' +
+                    '<td>' + asignacion.horario + '</td>' +
+                    '<td>' + asignacion.semestre + '</td>' +
+                    '<td><a href="#" onclick="verEstudiantes(' + asignacion.asignatura_id + ', \'' + asignacion.grupo + '\')" class="estudiantes-badge">' + asignacion.estudiantes_inscritos + ' estudiantes</a></td>' +
+                    '<td class="actions">' +
+                        '<button class="btn btn-primary" onclick="editarAsignacion(' + asignacion.id + ')">✏️ Editar</button>' +
+                        '<button class="btn btn-danger" onclick="eliminarAsignacion(' + asignacion.id + ', \'' + asignacion.profesor + '\', \'' + asignacion.asignatura + '\', \'' + asignacion.grupo + '\')">🗑️ Eliminar</button>' +
+                    '</td>';
+                tbody.appendChild(row);
+            });
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById('loadingTable').style.display = 'none';
+            document.getElementById('asignacionesTable').style.display = 'none';
+            document.getElementById('emptyTable').style.display = 'none';
+            document.getElementById('errorTable').style.display = 'block';
+            document.getElementById('errorTable').textContent = mensaje;
+        }
+
+        function filtrarAsignaciones() {
+            const busqueda = document.getElementById('searchBox').value.toLowerCase();
+            const asignacionesFiltradas = asignaciones.filter(function(asignacion) {
+                return asignacion.profesor.toLowerCase().includes(busqueda) ||
+                       asignacion.asignatura.toLowerCase().includes(busqueda) ||
+                       asignacion.asignatura_codigo.toLowerCase().includes(busqueda) ||
+                       asignacion.grupo.toLowerCase().includes(busqueda) ||
+                       asignacion.horario.toLowerCase().includes(busqueda) ||
+                       asignacion.semestre.toLowerCase().includes(busqueda);
+            });
+            mostrarAsignaciones(asignacionesFiltradas);
+        }
+
+        async function guardarAsignacion(event) {
+            event.preventDefault();
+            
+            const formData = {
+                profesor_id: parseInt(document.getElementById('profesor').value),
+                asignatura_id: parseInt(document.getElementById('asignatura').value),
+                grupo: document.getElementById('grupo').value,
+                horario: document.getElementById('horario').value,
+                semestre: document.getElementById('semestre').value
+            };
+
+            if (!formData.profesor_id || !formData.asignatura_id || !formData.grupo || !formData.horario) {
+                alert('Por favor complete todos los campos obligatorios');
+                return;
+            }
+
+            try {
+                const url = editandoId ? '/api/profesor-asignatura/' + editandoId : '/api/profesor-asignatura';
+                const method = editandoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarMensajeExito(editandoId ? 'Asignación actualizada correctamente' : 'Asignación creada correctamente');
+                    limpiarFormulario();
+                    cargarAsignaciones();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        function editarAsignacion(id) {
+            const asignacion = asignaciones.find(function(a) { return a.id === id; });
+            if (!asignacion) return;
+
+            editandoId = id;
+            document.getElementById('formTitle').textContent = '✏️ Editar Asignación';
+            document.getElementById('submitBtn').textContent = '💾 Actualizar';
+            
+            document.getElementById('profesor').value = asignacion.profesor_id;
+            document.getElementById('asignatura').value = asignacion.asignatura_id;
+            document.getElementById('grupo').value = asignacion.grupo;
+            document.getElementById('horario').value = asignacion.horario;
+            document.getElementById('semestre').value = asignacion.semestre;
+            
+            // Deshabilitar selects de profesor y asignatura al editar
+            document.getElementById('profesor').disabled = true;
+            document.getElementById('asignatura').disabled = true;
+            
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+        }
+
+        function cancelarEdicion() {
+            limpiarFormulario();
+        }
+
+        function limpiarFormulario() {
+            editandoId = null;
+            document.getElementById('formTitle').textContent = '➕ Asignar Profesor a Asignatura';
+            document.getElementById('submitBtn').textContent = '💾 Crear Asignación';
+            document.getElementById('cancelBtn').style.display = 'none';
+            
+            // Rehabilitar selects
+            document.getElementById('profesor').disabled = false;
+            document.getElementById('asignatura').disabled = false;
+            
+            document.getElementById('asignacionForm').reset();
+            document.getElementById('semestre').value = '2024-1'; // Valor por defecto
+        }
+
+        async function eliminarAsignacion(id, profesor, asignatura, grupo) {
+            if (!confirm('¿Estás seguro de que quieres eliminar la asignación de "' + profesor + '" en "' + asignatura + '" grupo ' + grupo + '?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/profesor-asignatura/' + id, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarMensajeExito('Asignación eliminada correctamente');
+                    cargarAsignaciones();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        function mostrarMensajeExito(mensaje) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = mensaje;
+            successDiv.style.display = 'block';
+            
+            setTimeout(function() {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        async function verEstudiantes(asignaturaId, grupo) {
+            try {
+                const response = await fetch('/api/inscripciones/por-asignatura/' + asignaturaId + '/' + grupo);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    let mensaje = 'Estudiantes inscritos en el grupo ' + grupo + ':\n\n';
+                    data.data.forEach(function(estudiante) {
+                        mensaje += '• ' + estudiante.estudiante + '\n';
+                    });
+                    alert(mensaje);
+                } else {
+                    alert('No hay estudiantes inscritos en esta asignación.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error cargando estudiantes');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Profesores - Sistema Universitario</title>
+    <link rel="stylesheet" href="/css/profesores.css">
+
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👨‍🏫 Gestión de Profesores</h1>
+            <a href="/" class="btn btn-back">← Volver al Dashboard</a>
+        </div>
+
+        <div class="content">
+            <!-- Formulario para agregar/editar profesor -->
+            <div class="form-section">
+                <h2 id="formTitle">➕ Agregar Nuevo Profesor</h2>
+                <div id="successMessage" class="success-message" style="display: none;"></div>
+                
+                <form id="profesorForm">
+                    <input type="hidden" id="profesorId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nombre">Nombre *</label>
+                            <input type="text" id="nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="apellido">Apellido *</label>
+                            <input type="text" id="apellido" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Teléfono</label>
+                            <input type="tel" id="telefono">
+                        </div>
+                        <div class="form-group">
+                            <label for="especialidad">Especialidad</label>
+                            <input type="text" id="especialidad" placeholder="Ej: Matemáticas, Programación, Física">
+                        </div>
+                        <div class="form-group">
+                            <label for="documento">Documento *</label>
+                            <input type="text" id="documento" required>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <button type="submit" class="btn btn-success" id="submitBtn">💾 Guardar</button>
+                        <button type="button" class="btn btn-warning" id="cancelBtn" onclick="cancelarEdicion()" style="display: none;">✖️ Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla de profesores -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>📋 Lista de Profesores</h2>
+                    <input type="text" class="search-box" id="searchBox" placeholder="🔍 Buscar profesor...">
+                </div>
+                
+                <div class="table-container">
+                    <div id="loadingTable" class="loading">Cargando profesores...</div>
+                    <div id="errorTable" class="error" style="display: none;">Error cargando datos</div>
+                    <div id="emptyTable" class="empty" style="display: none;">No hay profesores registrados</div>
+                    
+                    <table id="profesoresTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre Completo</th>
+                                <th>Email</th>
+                                <th>Teléfono</th>
+                                <th>Especialidad</th>
+                                <th>Documento</th>
+                                <th>Asignaturas</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="profesoresBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let profesores = [];
+        let editandoId = null;
+
+        // Cargar profesores al iniciar
+        document.addEventListener('DOMContentLoaded', cargarProfesores);
+
+        // Configurar búsqueda
+        document.getElementById('searchBox').addEventListener('input', filtrarProfesores);
+
+        // Configurar formulario
+        document.getElementById('profesorForm').addEventListener('submit', guardarProfesor);
+
+        async function cargarProfesores() {
+            try {
+                const response = await fetch('/api/profesores');
+                const data = await response.json();
+                
+                if (data.success) {
+                    profesores = data.data;
+                    mostrarProfesores(profesores);
+                } else {
+                    mostrarError('Error cargando profesores');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('Error de conexión');
+            }
+        }
+
+        async function mostrarProfesores(lista) {
+            const tableContainer = document.getElementById('profesoresTable');
+            const loadingDiv = document.getElementById('loadingTable');
+            const errorDiv = document.getElementById('errorTable');
+            const emptyDiv = document.getElementById('emptyTable');
+            const tbody = document.getElementById('profesoresBody');
+
+            // Ocultar mensajes
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            emptyDiv.style.display = 'none';
+
+            if (lista.length === 0) {
+                emptyDiv.style.display = 'block';
+                tableContainer.style.display = 'none';
+                return;
+            }
+
+            // Mostrar tabla
+            tableContainer.style.display = 'table';
+            tbody.innerHTML = '';
+
+            for (const profesor of lista) {
+                // Cargar asignaturas del profesor
+                let asignaturasTexto = 'Cargando...';
+                try {
+                    const resAsignaturas = await fetch(`/api/profesores/${profesor.id}/asignaturas`);
+                    const dataAsignaturas = await resAsignaturas.json();
+                    if (dataAsignaturas.success && dataAsignaturas.data.length > 0) {
+                        asignaturasTexto = dataAsignaturas.data.length + ' asignatura(s)';
+                    } else {
+                        asignaturasTexto = 'Sin asignaturas';
+                    }
+                } catch (error) {
+                    asignaturasTexto = 'Error';
+                }
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${profesor.id}</td>
+                    <td>${profesor.nombre} ${profesor.apellido}</td>
+                    <td>${profesor.email}</td>
+                    <td>${profesor.telefono || 'N/A'}</td>
+                    <td>${profesor.especialidad || 'N/A'}</td>
+                    <td>${profesor.documento}</td>
+                    <td>
+                        <a href="#" onclick="verAsignaturas(${profesor.id})" class="asignaturas-link">
+                            ${asignaturasTexto}
+                        </a>
+                    </td>
+                    <td class="actions">
+                        <button class="btn btn-primary" onclick="editarProfesor(${profesor.id})">✏️ Editar</button>
+                        <button class="btn btn-danger" onclick="eliminarProfesor(${profesor.id}, '${profesor.nombre} ${profesor.apellido}')">🗑️ Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            }
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById('loadingTable').style.display = 'none';
+            document.getElementById('profesoresTable').style.display = 'none';
+            document.getElementById('emptyTable').style.display = 'none';
+            document.getElementById('errorTable').style.display = 'block';
+            document.getElementById('errorTable').textContent = mensaje;
+        }
+
+        function filtrarProfesores() {
+            const busqueda = document.getElementById('searchBox').value.toLowerCase();
+            const profesoresFiltrados = profesores.filter(profesor => 
+                profesor.nombre.toLowerCase().includes(busqueda) ||
+                profesor.apellido.toLowerCase().includes(busqueda) ||
+                profesor.email.toLowerCase().includes(busqueda) ||
+                profesor.documento.includes(busqueda) ||
+                (profesor.especialidad && profesor.especialidad.toLowerCase().includes(busqueda))
+            );
+            mostrarProfesores(profesoresFiltrados);
+        }
+
+        async function guardarProfesor(event) {
+            event.preventDefault();
+            
+            const formData = {
+                nombre: document.getElementById('nombre').value,
+                apellido: document.getElementById('apellido').value,
+                email: document.getElementById('email').value,
+                telefono: document.getElementById('telefono').value,
+                especialidad: document.getElementById('especialidad').value,
+                documento: document.getElementById('documento').value
+            };
+
+            try {
+                const url = editandoId ? `/api/profesores/${editandoId}` : '/api/profesores';
+                const method = editandoId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarMensajeExito(editandoId ? 'Profesor actualizado correctamente' : 'Profesor creado correctamente');
+                    limpiarFormulario();
+                    cargarProfesores();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        function editarProfesor(id) {
+            const profesor = profesores.find(p => p.id === id);
+            if (!profesor) return;
+
+            editandoId = id;
+            document.getElementById('formTitle').textContent = '✏️ Editar Profesor';
+            document.getElementById('submitBtn').textContent = '💾 Actualizar';
+            
+            document.getElementById('nombre').value = profesor.nombre;
+            document.getElementById('apellido').value = profesor.apellido;
+            document.getElementById('email').value = profesor.email;
+            document.getElementById('telefono').value = profesor.telefono || '';
+            document.getElementById('especialidad').value = profesor.especialidad || '';
+            document.getElementById('documento').value = profesor.documento;
+            
+            document.getElementById('cancelBtn').style.display = 'inline-block';
+        }
+
+        function cancelarEdicion() {
+            limpiarFormulario();
+        }
+
+        function limpiarFormulario() {
+            editandoId = null;
+            document.getElementById('formTitle').textContent = '➕ Agregar Nuevo Profesor';
+            document.getElementById('submitBtn').textContent = '💾 Guardar';
+            document.getElementById('cancelBtn').style.display = 'none';
+            document.getElementById('profesorForm').reset();
+        }
+
+        async function eliminarProfesor(id, nombre) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar al profesor "${nombre}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/profesores/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    mostrarMensajeExito('Profesor eliminado correctamente');
+                    cargarProfesores();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            }
+        }
+
+        async function verAsignaturas(profesorId) {
+            try {
+                const response = await fetch(`/api/profesores/${profesorId}/asignaturas`);
+                const data = await response.json();
+                
+                if (data.success && data.data.length > 0) {
+                    let mensaje = 'Asignaturas que imparte:\n\n';
+                    data.data.forEach(asignatura => {
+                        mensaje += `• ${asignatura.asignatura} (${asignatura.codigo})\n`;
+                        mensaje += `  Grupo: ${asignatura.grupo} | Horario: ${asignatura.horario}\n`;
+                        mensaje += `  Estudiantes inscritos: ${asignatura.estudiantes_inscritos}\n\n`;
+                    });
+                    alert(mensaje);
+                } else {
+                    alert('Este profesor no tiene asignaturas asignadas.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error cargando asignaturas');
+            }
+        }
+
+        function mostrarMensajeExito(mensaje) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = mensaje;
+            successDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
