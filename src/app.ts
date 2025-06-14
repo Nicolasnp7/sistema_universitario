@@ -4,7 +4,7 @@ import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import { db } from './db';
 
-// ✅ Importa correctamente las rutas
+// Importa correctamente las rutas
 import asignaturasRouter from './routes/asignaturas';
 
 dotenv.config();
@@ -14,7 +14,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Monta las rutas
+// Monta las rutas
 app.use('/api/asignaturas', asignaturasRouter);
 
 app.get('/', (req: Request, res: Response) => {
