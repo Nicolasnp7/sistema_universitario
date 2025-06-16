@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignaciones Profesor-Asignatura - Sistema Universitario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .nav-buttons {
+            margin-top: 20px;
+        }
+        
+        .nav-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 5px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 5px solid #FF9800;
+        }
+        
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #FF9800;
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #5a6268);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 10px 20px rgba(108, 117, 125, 0.3);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+        }
+        
+        .btn-info:hover {
+            box-shadow: 0 10px 20px rgba(23, 162, 184, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.3);
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            margin: 0 4px;
+        }
+        
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 50px;
+            font-size: 16px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #FF9800;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+        
+        .table-section {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .table-header {
+            background: #f8f9fa;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .table-header h3 {
+            color: #333;
+            font-size: 1.4rem;
+            margin: 0;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th, td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 4px solid #FF9800;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #FF9800;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .grupo-badge {
+            background: #FF9800;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .semestre-badge {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .horario-text {
+            font-size: 0.9rem;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .estudiantes-count {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .estudiantes-count:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-button {
+                display: block;
+                margin: 5px 0;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔗 Asignaciones Profesor-Asignatura</h1>
+            <p>Gestiona las asignaciones de profesores a asignaturas por grupos y horarios</p>
+            <div class="nav-buttons">
+                <a href="/" class="nav-button">🏠 Dashboard</a>
+                <a href="/estudiantes" class="nav-button">👥 Estudiantes</a>
+                <a href="/profesores" class="nav-button">👨‍🏫 Profesores</a>
+                <a href="/asignaturas" class="nav-button">📚 Asignaturas</a>
+                <a href="/inscripciones" class="nav-button">📝 Inscripciones</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Estadísticas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalAsignaciones">0</div>
+                    <div class="stat-label">Total Asignaciones</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="asignacionesActivas">0</div>
+                    <div class="stat-label">Asignaciones Activas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="gruposUnicos">0</div>
+                    <div class="stat-label">Grupos Diferentes</div>
+                </div>
+            </div>
+
+            <!-- Formulario -->
+            <div class="form-section">
+                <h2 id="formTitle">➕ Crear Nueva Asignación</h2>
+                <div id="mensaje"></div>
+                
+                <form id="formAsignacion">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="profesor_id">Profesor *</label>
+                            <select id="profesor_id" name="profesor_id" required>
+                                <option value="">Seleccionar profesor...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="asignatura_id">Asignatura *</label>
+                            <select id="asignatura_id" name="asignatura_id" required>
+                                <option value="">Seleccionar asignatura...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="grupo">Grupo *</label>
+                            <input type="text" id="grupo" name="grupo" required 
+                                   placeholder="Ej: A, B, 01, 02..." maxlength="10">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="semestre">Semestre</label>
+                            <input type="text" id="semestre" name="semestre" 
+                                   placeholder="Ej: 2024-1, 2024-2..." value="2024-1">
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="horario">Horario *</label>
+                            <input type="text" id="horario" name="horario" required 
+                                   placeholder="Ej: Lunes y Miércoles 8:00-10:00, Martes y Jueves 14:00-16:00">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="submit" class="btn" id="btnGuardar">
+                            💾 Guardar Asignación
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelarEdicion()">
+                            ✖️ Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Búsqueda -->
+            <div class="search-section">
+                <input type="text" id="buscarAsignacion" class="search-box" 
+                       placeholder="🔍 Buscar asignaciones por profesor, asignatura, grupo o horario...">
+            </div>
+
+            <!-- Tabla -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h3>📋 Lista de Asignaciones</h3>
+                </div>
+                <div class="table-container">
+                    <table id="tablaAsignaciones">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Profesor</th>
+                                <th>Asignatura</th>
+                                <th>Grupo</th>
+                                <th>Horario</th>
+                                <th>Semestre</th>
+                                <th>Estudiantes</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Datos cargados dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let asignacionesData = [];
+        let opcionesCrear = {};
+        let editandoId = null;
+
+        // Cargar datos al inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarAsignaciones();
+            cargarOpcionesCrear();
+        });
+
+        // Función para cargar asignaciones
+        function cargarAsignaciones() {
+            fetch('/api/profesor-asignatura')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        asignacionesData = data.data;
+                        mostrarAsignaciones();
+                        actualizarEstadisticas();
+                    } else {
+                        mostrarMensaje('Error al cargar asignaciones: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarMensaje('Error al cargar asignaciones', 'error');
+                });
+        }
+
+        // Cargar opciones para crear asignaciones
+        function cargarOpcionesCrear() {
+            fetch('/api/profesor-asignatura/opciones/crear')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        opcionesCrear = data.data;
+                        llenarSelectProfesores();
+                        llenarSelectAsignaturas();
+                    } else {
+                        mostrarMensaje('Error al cargar opciones: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarMensaje('Error al cargar opciones', 'error');
+                });
+        }
+
+        function llenarSelectProfesores() {
+            const select = document.getElementById('profesor_id');
+            select.innerHTML = '<option value="">Seleccionar profesor...</option>';
+            
+            if (opcionesCrear.profesores) {
+                opcionesCrear.profesores.forEach(profesor => {
+                    const option = document.createElement('option');
+                    option.value = profesor.id;
+                    option.textContent = profesor.nombre_completo + 
+                        (profesor.especialidad ? ' - ' + profesor.especialidad : '');
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function llenarSelectAsignaturas() {
+            const select = document.getElementById('asignatura_id');
+            select.innerHTML = '<option value="">Seleccionar asignatura...</option>';
+            
+            if (opcionesCrear.asignaturas) {
+                opcionesCrear.asignaturas.forEach(asignatura => {
+                    const option = document.createElement('option');
+                    option.value = asignatura.id;
+                    option.textContent = asignatura.nombre + ' (' + asignatura.codigo + ') - ' + 
+                        asignatura.creditos + ' créditos';
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        // Mostrar asignaciones en la tabla
+        function mostrarAsignaciones() {
+            const tbody = document.querySelector('#tablaAsignaciones tbody');
+            tbody.innerHTML = '';
+
+            if (asignacionesData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="empty-state">
+                            <div class="empty-state-icon">🔗</div>
+                            <p>No hay asignaciones registradas</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            asignacionesData.forEach(asignacion => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>#${asignacion.id}</strong></td>
+                    <td><strong>${asignacion.profesor_nombre}</strong><br>
+                        <small style="color: #666;">${asignacion.profesor_especialidad || 'Sin especialidad'}</small>
+                    </td>
+                    <td><strong>${asignacion.asignatura_nombre}</strong><br>
+                        <small style="color: #666;">${asignacion.asignatura_codigo} - ${asignacion.asignatura_creditos} créditos</small>
+                    </td>
+                    <td><span class="grupo-badge">Grupo ${asignacion.grupo}</span></td>
+                    <td><div class="horario-text">${asignacion.horario}</div></td>
+                    <td><span class="semestre-badge">${asignacion.semestre}</span></td>
+                    <td>
+                        <a href="javascript:void(0)" onclick="verEstudiantes(${asignacion.id}, '${asignacion.asignatura_id}', '${asignacion.grupo}')" 
+                           class="estudiantes-count">${asignacion.estudiantes_count} estudiantes</a>
+                    </td>
+                    <td>
+                        <button class="btn btn-small btn-secondary" onclick="editarAsignacion(${asignacion.id})">
+                            ✏️ Editar
+                        </button>
+                        <button class="btn btn-small btn-danger" onclick="eliminarAsignacion(${asignacion.id})">
+                            🗑️ Eliminar
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Actualizar estadísticas
+        function actualizarEstadisticas() {
+            const total = asignacionesData.length;
+            const activas = asignacionesData.filter(a => a.activo !== false).length;
+            const grupos = new Set(asignacionesData.map(a => a.grupo)).size;
+            
+            document.getElementById('totalAsignaciones').textContent = total;
+            document.getElementById('asignacionesActivas').textContent = activas;
+            document.getElementById('gruposUnicos').textContent = grupos;
+        }
+
+        // Ver estudiantes inscritos
+        function verEstudiantes(asignacionId, asignaturaId, grupo) {
+            fetch(`/api/inscripciones/por-asignatura/${asignaturaId}/${grupo}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const estudiantes = data.data;
+                        if (estudiantes.length === 0) {
+                            alert('No hay estudiantes inscritos en este grupo');
+                        } else {
+                            let mensaje = `Estudiantes inscritos en el grupo ${grupo}:\n\n`;
+                            estudiantes.forEach(est => {
+                                mensaje += `• ${est.estudiante_nombre}\\n`;
+                                mensaje += `  Documento: ${est.estudiante_documento}\\n`;
+                                if (est.nota_final) {
+                                    mensaje += `  Promedio: ${est.nota_final}\\n`;
+                                }
+                                mensaje += '\\n';
+                            });
+                            alert(mensaje);
+                        }
+                    } else {
+                        mostrarMensaje('Error al obtener estudiantes: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    mostrarMensaje('Error al obtener estudiantes', 'error');
+                });
+        }
+
+        // Guardar asignación (crear o actualizar)
+        document.getElementById('formAsignacion').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Convertir IDs a números
+            data.profesor_id = parseInt(data.profesor_id);
+            data.asignatura_id = parseInt(data.asignatura_id);
+            
+            // Limpiar campos vacíos
+            Object.keys(data).forEach(key => {
+                if (data[key] === '') data[key] = null;
+            });
+
+            const url = editandoId ? `/api/profesor-asignatura/${editandoId}` : '/api/profesor-asignatura';
+            const method = editandoId ? 'PUT' : 'POST';
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarMensaje(editandoId ? 'Asignación actualizada correctamente' : 'Asignación creada correctamente', 'success');
+                    cargarAsignaciones();
+                    cancelarEdicion();
+                } else {
+                    mostrarMensaje('Error: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarMensaje('Error al guardar asignación', 'error');
+            });
+        });
+
+        // Editar asignación
+        function editarAsignacion(id) {
+            const asignacion = asignacionesData.find(a => a.id === id);
+            if (!asignacion) return;
+
+            editandoId = id;
+            document.getElementById('formTitle').textContent = '✏️ Editar Asignación';
+            document.getElementById('btnGuardar').innerHTML = '💾 Actualizar Asignación';
+
+            // Llenar formulario (solo campos editables)
+            document.getElementById('grupo').value = asignacion.grupo || '';
+            document.getElementById('horario').value = asignacion.horario || '';
+            document.getElementById('semestre').value = asignacion.semestre || '';
+
+            // Deshabilitar campos no editables
+            document.getElementById('profesor_id').disabled = true;
+            document.getElementById('asignatura_id').disabled = true;
+
+            // Scroll al formulario
+            document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Cancelar edición
+        function cancelarEdicion() {
+            editandoId = null;
+            document.getElementById('formTitle').textContent = '➕ Crear Nueva Asignación';
+            document.getElementById('btnGuardar').innerHTML = '💾 Guardar Asignación';
+            document.getElementById('formAsignacion').reset();
+            
+            // Rehabilitar campos
+            document.getElementById('profesor_id').disabled = false;
+            document.getElementById('asignatura_id').disabled = false;
+        }
+
+        // Eliminar asignación
+        function eliminarAsignacion(id) {
+            const asignacion = asignacionesData.find(a => a.id === id);
+            if (!asignacion) return;
+
+            if (!confirm(`¿Estás seguro de que quieres eliminar la asignación del profesor ${asignacion.profesor_nombre} para ${asignacion.asignatura_nombre} grupo ${asignacion.grupo}?`)) {
+                return;
+            }
+
+            fetch(`/api/profesor-asignatura/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarMensaje('Asignación eliminada correctamente', 'success');
+                    cargarAsignaciones();
+                } else {
+                    mostrarMensaje('Error: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarMensaje('Error al eliminar asignación', 'error');
+            });
+        }
+
+        // Búsqueda de asignaciones
+        document.getElementById('buscarAsignacion').addEventListener('input', function() {
+            const busqueda = this.value.toLowerCase();
+            const filas = document.querySelectorAll('#tablaAsignaciones tbody tr');
+            
+            filas.forEach(fila => {
+                if (fila.cells.length < 8) return; // Skip empty state row
+                
+                const texto = fila.textContent.toLowerCase();
+                fila.style.display = texto.includes(busqueda) ? '' : 'none';
+            });
+        });
+
+        // Mostrar mensajes
+        function mostrarMensaje(mensaje, tipo) {
+            const contenedor = document.getElementById('mensaje');
+            const icon = tipo === 'success' ? '✅' : '❌';
+            contenedor.innerHTML = `<div class="message ${tipo}">${icon} ${mensaje}</div>`;
+            
+            setTimeout(() => {
+                contenedor.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

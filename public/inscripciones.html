@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inscripciones - Sistema Universitario</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f9fa;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #2196F3;
+            color: #2196F3;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        select, input, button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .estado {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .aprobado {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .reprobado {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .en-curso {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .nota-input {
+            width: 60px;
+            padding: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            width: auto;
+            margin: 0 2px;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+        }
+        
+        .filter-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .nav-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 10px 10px 0 0;
+            transition: background 0.3s ease;
+        }
+        
+        .nav-button:hover {
+            background: #5a6268;
+            text-decoration: none;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 Gestión de Inscripciones</h1>
+            <p>Inscribe estudiantes en asignaturas y gestiona calificaciones</p>
+            <div style="margin-top: 20px;">
+                <a href="/" class="nav-button">🏠 Dashboard</a>
+                <a href="/estudiantes" class="nav-button">👥 Estudiantes</a>
+                <a href="/profesores" class="nav-button">👨‍🏫 Profesores</a>
+                <a href="/asignaturas" class="nav-button">📚 Asignaturas</a>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="cambiarTab('inscribir')">📝 Inscribir Estudiante</button>
+            <button class="tab" onclick="cambiarTab('calificaciones')">📊 Gestionar Calificaciones</button>
+            <button class="tab" onclick="cambiarTab('consultas')">📋 Consultar Inscripciones</button>
+        </div>
+
+        <!-- Tab Inscribir -->
+        <div id="inscribir" class="tab-content active">
+            <h2>Inscribir Estudiante en Asignatura</h2>
+            <div id="mensaje-inscribir"></div>
+            
+            <form id="formInscribir">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label for="estudianteSelect">Estudiante:</label>
+                        <select id="estudianteSelect" required>
+                            <option value="">Seleccionar estudiante...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="asignaturaSelect">Asignatura - Profesor - Grupo:</label>
+                        <select id="asignaturaSelect" required>
+                            <option value="">Seleccionar asignatura...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn">📝 Inscribir Estudiante</button>
+            </form>
+        </div>
+
+        <!-- Tab Calificaciones -->
+        <div id="calificaciones" class="tab-content">
+            <h2>Gestionar Calificaciones</h2>
+            <div id="mensaje-calificaciones"></div>
+            
+            <div class="filter-container">
+                <div class="filter-group">
+                    <input type="text" id="buscarCalificaciones" class="search-box" 
+                           placeholder="🔍 Buscar por estudiante, asignatura o profesor...">
+                </div>
+                
+                <div class="filter-group">
+                    <select id="filtroAsignatura">
+                        <option value="">Todas las asignaturas</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <select id="filtroEstado">
+                        <option value="">Todos los estados</option>
+                        <option value="aprobado">Aprobado</option>
+                        <option value="reprobado">Reprobado</option>
+                        <option value="en-curso">En Curso</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table id="tablaCalificaciones">
+                    <thead>
+                        <tr>
+                            <th>Estudiante</th>
+                            <th>Asignatura</th>
+                            <th>Profesor</th>
+                            <th>Grupo</th>
+                            <th>Nota 1</th>
+                            <th>Nota 2</th>
+                            <th>Nota 3</th>
+                            <th>Promedio</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Datos cargados dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab Consultas -->
+        <div id="consultas" class="tab-content">
+            <h2>Consultar Inscripciones</h2>
+            <div id="mensaje-consultas"></div>
+            
+            <input type="text" id="buscarInscripciones" class="search-box" 
+                   placeholder="🔍 Buscar inscripciones...">
+            
+            <div class="table-container">
+                <table id="tablaInscripciones">
+                    <thead>
+                        <tr>
+                            <th>Estudiante</th>
+                            <th>Documento</th>
+                            <th>Asignatura</th>
+                            <th>Código</th>
+                            <th>Profesor</th>
+                            <th>Grupo</th>
+                            <th>Horario</th>
+                            <th>Créditos</th>
+                            <th>Fecha Inscripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Datos cargados dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let inscripcionesData = [];
+        let opcionesInscripcion = {};
+        let editandoInscripcion = null;
+
+        // Funciones principales
+        function cambiarTab(tabName) {
+            // Ocultar todos los tabs
+            document.querySelectorAll('.tab-content').forEach(function(content) {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(function(tab) {
+                tab.classList.remove('active');
+            });
+            
+            // Mostrar tab seleccionado
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Cargar datos según el tab
+            if (tabName === 'inscribir') {
+                cargarOpcionesInscripcion();
+            } else if (tabName === 'calificaciones') {
+                cargarCalificaciones();
+            } else if (tabName === 'consultas') {
+                cargarInscripciones();
+            }
+        }
+
+        // Cargar opciones para inscripción
+        function cargarOpcionesInscripcion() {
+            fetch('/api/inscripciones/opciones-inscripcion')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        opcionesInscripcion = data.data;
+                        llenarSelectEstudiantes();
+                        llenarSelectAsignaturas();
+                    } else {
+                        mostrarMensaje('inscribir', 'Error al cargar opciones: ' + data.message, 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('inscribir', 'Error al cargar opciones', 'error');
+                });
+        }
+
+        function llenarSelectEstudiantes() {
+            const select = document.getElementById('estudianteSelect');
+            select.innerHTML = '<option value="">Seleccionar estudiante...</option>';
+            
+            if (opcionesInscripcion.estudiantes) {
+                opcionesInscripcion.estudiantes.forEach(function(estudiante) {
+                    const option = document.createElement('option');
+                    option.value = estudiante.id;
+                    option.textContent = estudiante.nombre_completo + ' (' + estudiante.documento + ')';
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        function llenarSelectAsignaturas() {
+            const select = document.getElementById('asignaturaSelect');
+            select.innerHTML = '<option value="">Seleccionar asignatura...</option>';
+            
+            if (opcionesInscripcion.asignaturas) {
+                opcionesInscripcion.asignaturas.forEach(function(asignatura) {
+                    const option = document.createElement('option');
+                    option.value = asignatura.profesor_asignatura_id;
+                    option.textContent = asignatura.asignatura_nombre + ' (' + asignatura.asignatura_codigo + ') - ' +
+                                       asignatura.profesor_nombre + ' - Grupo ' + asignatura.grupo;
+                    select.appendChild(option);
+                });
+            }
+        }
+
+        // Cargar calificaciones
+        function cargarCalificaciones() {
+            fetch('/api/inscripciones')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        inscripcionesData = data.data;
+                        mostrarCalificaciones();
+                        llenarFiltroAsignaturas();
+                    } else {
+                        mostrarMensaje('calificaciones', 'Error al cargar calificaciones: ' + data.message, 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('calificaciones', 'Error al cargar calificaciones', 'error');
+                });
+        }
+
+        function mostrarCalificaciones() {
+            const tbody = document.querySelector('#tablaCalificaciones tbody');
+            tbody.innerHTML = '';
+
+            if (inscripcionesData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No hay inscripciones registradas</td></tr>';
+                return;
+            }
+
+            inscripcionesData.forEach(function(inscripcion) {
+                const row = document.createElement('tr');
+                
+                // Función auxiliar para formatear notas y manejar valores null/undefined
+                function formatearNota(nota) {
+                    if (nota === null || nota === undefined || nota === '') {
+                        return '-';
+                    }
+                    // Convertir a número y verificar que sea válido
+                    const numeroNota = parseFloat(nota);
+                    if (isNaN(numeroNota)) {
+                        return '-';
+                    }
+                    return numeroNota.toFixed(1);
+                }
+
+                // Función para calcular y formatear promedio
+                function calcularPromedio(nota1, nota2, nota3) {
+                    const n1 = parseFloat(nota1);
+                    const n2 = parseFloat(nota2);
+                    const n3 = parseFloat(nota3);
+                    
+                    if (isNaN(n1) || isNaN(n2) || isNaN(n3)) {
+                        return '-';
+                    }
+                    
+                    const promedio = (n1 + n2 + n3) / 3;
+                    return promedio.toFixed(1);
+                }
+
+                // Función para determinar estado
+                function determinarEstado(promedio) {
+                    if (promedio === '-') return 'en-curso';
+                    const numeroPromedio = parseFloat(promedio);
+                    if (isNaN(numeroPromedio)) return 'en-curso';
+                    return numeroPromedio >= 3.0 ? 'aprobado' : 'reprobado';
+                }
+
+                const nota1 = formatearNota(inscripcion.nota1);
+                const nota2 = formatearNota(inscripcion.nota2);
+                const nota3 = formatearNota(inscripcion.nota3);
+                const promedio = calcularPromedio(inscripcion.nota1, inscripcion.nota2, inscripcion.nota3);
+                const estado = determinarEstado(promedio);
+
+                row.innerHTML = '<td>' + (inscripcion.estudiante_nombre || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.asignatura_nombre || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.profesor_nombre || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.grupo || 'N/A') + '</td>' +
+                               '<td><input type="number" class="nota-input" value="' + (inscripcion.nota1 || '') + '" ' +
+                               'min="0" max="5" step="0.1" onchange="actualizarNota(' + inscripcion.id + ', \'nota1\', this.value)"></td>' +
+                               '<td><input type="number" class="nota-input" value="' + (inscripcion.nota2 || '') + '" ' +
+                               'min="0" max="5" step="0.1" onchange="actualizarNota(' + inscripcion.id + ', \'nota2\', this.value)"></td>' +
+                               '<td><input type="number" class="nota-input" value="' + (inscripcion.nota3 || '') + '" ' +
+                               'min="0" max="5" step="0.1" onchange="actualizarNota(' + inscripcion.id + ', \'nota3\', this.value)"></td>' +
+                               '<td><strong>' + promedio + '</strong></td>' +
+                               '<td><span class="estado ' + estado + '">' + 
+                               (estado === 'aprobado' ? 'Aprobado' : estado === 'reprobado' ? 'Reprobado' : 'En Curso') + '</span></td>' +
+                               '<td>' +
+                               '<button class="btn btn-small btn-success" onclick="guardarNotasCompletas(' + inscripcion.id + ')">💾 Guardar</button>' +
+                               '</td>';
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function actualizarNota(inscripcionId, campo, valor) {
+            if (valor === '' || valor === null) {
+                valor = null;
+            } else {
+                valor = parseFloat(valor);
+                if (isNaN(valor) || valor < 0 || valor > 5) {
+                    mostrarMensaje('calificaciones', 'La nota debe estar entre 0.0 y 5.0', 'error');
+                    return;
+                }
+            }
+
+            const data = {};
+            data[campo] = valor;
+
+            fetch('/api/inscripciones/' + inscripcionId + '/notas', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    mostrarMensaje('calificaciones', 'Nota actualizada correctamente', 'success');
+                    // Recargar para actualizar promedio
+                    setTimeout(function() {
+                        cargarCalificaciones();
+                    }, 1000);
+                } else {
+                    mostrarMensaje('calificaciones', 'Error al actualizar nota: ' + data.message, 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                mostrarMensaje('calificaciones', 'Error al actualizar nota', 'error');
+            });
+        }
+
+        function guardarNotasCompletas(inscripcionId) {
+            const row = event.target.closest('tr');
+            const inputs = row.querySelectorAll('.nota-input');
+            
+            const data = {
+                nota1: inputs[0].value === '' ? null : parseFloat(inputs[0].value),
+                nota2: inputs[1].value === '' ? null : parseFloat(inputs[1].value),
+                nota3: inputs[2].value === '' ? null : parseFloat(inputs[2].value)
+            };
+
+            // Validar notas
+            for (const nota in data) {
+                if (data[nota] !== null && (isNaN(data[nota]) || data[nota] < 0 || data[nota] > 5)) {
+                    mostrarMensaje('calificaciones', 'Todas las notas deben estar entre 0.0 y 5.0', 'error');
+                    return;
+                }
+            }
+
+            fetch('/api/inscripciones/' + inscripcionId + '/notas', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    mostrarMensaje('calificaciones', 'Notas guardadas correctamente', 'success');
+                    cargarCalificaciones();
+                } else {
+                    mostrarMensaje('calificaciones', 'Error al guardar notas: ' + data.message, 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                mostrarMensaje('calificaciones', 'Error al guardar notas', 'error');
+            });
+        }
+
+        function llenarFiltroAsignaturas() {
+            const select = document.getElementById('filtroAsignatura');
+            const asignaturas = new Set();
+            
+            inscripcionesData.forEach(function(inscripcion) {
+                if (inscripcion.asignatura_nombre) {
+                    asignaturas.add(inscripcion.asignatura_nombre);
+                }
+            });
+            
+            select.innerHTML = '<option value="">Todas las asignaturas</option>';
+            asignaturas.forEach(function(asignatura) {
+                const option = document.createElement('option');
+                option.value = asignatura;
+                option.textContent = asignatura;
+                select.appendChild(option);
+            });
+        }
+
+        // Cargar inscripciones
+        function cargarInscripciones() {
+            fetch('/api/inscripciones')
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        mostrarInscripciones(data.data);
+                    } else {
+                        mostrarMensaje('consultas', 'Error al cargar inscripciones: ' + data.message, 'error');
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    mostrarMensaje('consultas', 'Error al cargar inscripciones', 'error');
+                });
+        }
+
+        function mostrarInscripciones(inscripciones) {
+            const tbody = document.querySelector('#tablaInscripciones tbody');
+            tbody.innerHTML = '';
+
+            if (inscripciones.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">No hay inscripciones registradas</td></tr>';
+                return;
+            }
+
+            inscripciones.forEach(function(inscripcion) {
+                const row = document.createElement('tr');
+                
+                function formatearFecha(fecha) {
+                    if (!fecha) return 'N/A';
+                    const date = new Date(fecha);
+                    return date.toLocaleDateString('es-ES');
+                }
+
+                row.innerHTML = '<td>' + (inscripcion.estudiante_nombre || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.estudiante_documento || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.asignatura_nombre || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.asignatura_codigo || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.profesor_nombre || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.grupo || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.horario || 'N/A') + '</td>' +
+                               '<td>' + (inscripcion.creditos || 'N/A') + '</td>' +
+                               '<td>' + formatearFecha(inscripcion.fecha_inscripcion) + '</td>' +
+                               '<td>' +
+                               '<button class="btn btn-small btn-danger" onclick="eliminarInscripcion(' + inscripcion.id + ')">🗑️ Eliminar</button>' +
+                               '</td>';
+
+                tbody.appendChild(row);
+            });
+        }
+
+        function eliminarInscripcion(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta inscripción?')) {
+                return;
+            }
+
+            fetch('/api/inscripciones/' + id, {
+                method: 'DELETE'
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    mostrarMensaje('consultas', 'Inscripción eliminada correctamente', 'success');
+                    cargarInscripciones();
+                } else {
+                    mostrarMensaje('consultas', 'Error al eliminar inscripción: ' + data.message, 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                mostrarMensaje('consultas', 'Error al eliminar inscripción', 'error');
+            });
+        }
+
+        // Formulario de inscripción
+        document.getElementById('formInscribir').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const estudianteId = document.getElementById('estudianteSelect').value;
+            const profesorAsignaturaId = document.getElementById('asignaturaSelect').value;
+            
+            if (!estudianteId || !profesorAsignaturaId) {
+                mostrarMensaje('inscribir', 'Por favor selecciona estudiante y asignatura', 'error');
+                return;
+            }
+
+            const data = {
+                estudiante_id: parseInt(estudianteId),
+                profesor_asignatura_id: parseInt(profesorAsignaturaId)
+            };
+
+            fetch('/api/inscripciones', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    mostrarMensaje('inscribir', 'Estudiante inscrito correctamente', 'success');
+                    document.getElementById('formInscribir').reset();
+                } else {
+                    mostrarMensaje('inscribir', 'Error al inscribir: ' + data.message, 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                mostrarMensaje('inscribir', 'Error al inscribir estudiante', 'error');
+            });
+        });
+
+        // Búsquedas y filtros
+        document.getElementById('buscarCalificaciones').addEventListener('input', function() {
+            filtrarCalificaciones();
+        });
+
+        document.getElementById('filtroAsignatura').addEventListener('change', function() {
+            filtrarCalificaciones();
+        });
+
+        document.getElementById('filtroEstado').addEventListener('change', function() {
+            filtrarCalificaciones();
+        });
+
+        function filtrarCalificaciones() {
+            const busqueda = document.getElementById('buscarCalificaciones').value.toLowerCase();
+            const filtroAsignatura = document.getElementById('filtroAsignatura').value;
+            const filtroEstado = document.getElementById('filtroEstado').value;
+            
+            const filas = document.querySelectorAll('#tablaCalificaciones tbody tr');
+            
+            filas.forEach(function(fila) {
+                if (fila.cells.length < 10) return; // Skip empty rows
+                
+                const estudiante = fila.cells[0].textContent.toLowerCase();
+                const asignatura = fila.cells[1].textContent.toLowerCase();
+                const profesor = fila.cells[2].textContent.toLowerCase();
+                const estadoElement = fila.cells[8].querySelector('.estado');
+                const estado = estadoElement ? estadoElement.className.split(' ')[1] : '';
+                
+                let mostrar = true;
+                
+                // Filtro de búsqueda
+                if (busqueda && !estudiante.includes(busqueda) && !asignatura.includes(busqueda) && !profesor.includes(busqueda)) {
+                    mostrar = false;
+                }
+                
+                // Filtro de asignatura
+                if (filtroAsignatura && !asignatura.includes(filtroAsignatura.toLowerCase())) {
+                    mostrar = false;
+                }
+                
+                // Filtro de estado
+                if (filtroEstado && estado !== filtroEstado) {
+                    mostrar = false;
+                }
+                
+                fila.style.display = mostrar ? '' : 'none';
+            });
+        }
+
+        document.getElementById('buscarInscripciones').addEventListener('input', function() {
+            const busqueda = this.value.toLowerCase();
+            const filas = document.querySelectorAll('#tablaInscripciones tbody tr');
+            
+            filas.forEach(function(fila) {
+                if (fila.cells.length < 10) return; // Skip empty rows
+                
+                const texto = fila.textContent.toLowerCase();
+                fila.style.display = texto.includes(busqueda) ? '' : 'none';
+            });
+        });
+
+        // Función para mostrar mensajes
+        function mostrarMensaje(tab, mensaje, tipo) {
+            const contenedor = document.getElementById('mensaje-' + tab);
+            contenedor.innerHTML = '<div class="message ' + tipo + '">' + mensaje + '</div>';
+            
+            setTimeout(function() {
+                contenedor.innerHTML = '';
+            }, 5000);
+        }
+
+        // Función para mostrar mensaje de éxito
+        function mostrarMensajeExito(tab, mensaje) {
+            mostrarMensaje(tab, mensaje, 'success');
+        }
+
+        // Función para mostrar mensaje de error
+        function mostrarMensajeError(tab, mensaje) {
+            mostrarMensaje(tab, mensaje, 'error');
+        }
+
+        // Inicializar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarOpcionesInscripcion();
+        });
+    </script>
+</body>
+</html>
